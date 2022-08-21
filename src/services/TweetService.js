@@ -13,3 +13,5 @@ class TweetService {
 
     searchTweets = () => {};
 }
+
+module.exports = TweetService

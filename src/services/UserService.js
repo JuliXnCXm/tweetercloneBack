@@ -14,19 +14,24 @@ class UserService {
         return this.objUserController.findAndUpdate(req, res)
     }
 
+    getUsers = (req, res) => {
+        return this.objUserController.getUsers(req, res)
+    }
+
     deleteUser = (req, res) => {
         return this.objUserController.deleteUser(req, res)
     }
 
-    getUser = (req, res) => {
-        return this.objUserController.getUser(req, res)
+    getUserShow = (req, res) => {
+        return this.objUserController.getUserShow(req, res)
     }
 
-    register = (req, res) => {
-        return this.objUserController.register(req, res)
+    logout = (req, res) => {
+        return this.objUserController.logout(req, res)
     }
-    login = (req, res) => {
-        return this.objUserController.login(req, res)
+
+    usernnameChecker = (req, res) => {
+        return this.objUserController.usernnameChecker(req, res)
     }
 }
 

@@ -1,12 +1,10 @@
-const { UserSchema,User, UserCreate} = require("../models/User");
+const { UserSchema, User, UserCredentials } = require("../models/User");
 const Photo = require("../models/Photo");
 const moment = require("moment");
 const jwt = require("jsonwebtoken");
 const { config } = require("../config/config");
-const path = require("path");
 const bcrypt = require("bcrypt");
 const TokenController = require("./TokenController");
-const fs = require("fs");
 
 class UserController {
 
@@ -51,136 +49,92 @@ class UserController {
     };
 
     deleteUser = (req, res) => {
-        let id = req.params.id;
-        User.findByIdAndRemove(id, (err, userRemoved) => {
-        if (err) {
-            res.status(500).send({
-            message: "Error al eliminar el usuario",
-            });
-        } else {
-            if (!userRemoved) {
-            res.status(404).send({
-                message: "No se ha podido eliminar el usuario",
-            });
-            res.redirect("/");
+        let id = req.query.user_id;
+        User.find({ _id: id })
+        .then((dataDeleted) => {
+            if (dataDeleted) {
+            this.rollbackUserCreation(
+                res,
+                dataDeleted.user_info[0].user_id,
+                "User deleted"
+            );
             } else {
-            res.status(200).send({
-                message: "user deleted",
+            res.status(404).send({
+                message: "User could not be deleted",
             });
             }
-        }
+            console.log(dataDeleted);
+        })
+        .catch((err) => {
+            console.log(err);
+            return res.status(500).send({
+            message: "Error while trying delete user",
+            });
         });
     };
 
-    getUser = (req, res) => {
-        const objToken = new TokenController();
-        let user = objToken.verifyToken(req, res);
-        User.findById(user.user._id, (err, user) => {
-        if (err) {
-            res.status(500).send({
-            message: "Error al devolver los datos",
-            });
-        } else {
-            if (!user) {
-            res.status(404).send({
-                message: "No hay usuarios",
-            });
-            } else {
-            res.status(200).send({
-                message: "Usuario devuelto",
-                user,
+    getUsers = (req, res) => {
+        User.find()
+        .then((data) => {
+            if (data && data.length > 0) {
+            return res.status(200).send({
+                message: "Users retrieved successfully",
+                data: data,
             });
             }
-        }
+            return res.status(404).send({
+            message: "No users were retrieved",
+            });
+        })
+        .catch((err) => {
+            return res.status(500).send({
+            message: err.message,
+            });
         });
     };
 
-    login = (req, res) => {
-        let user = req.body;
-        UserCreate.findOne({ email: user.email }, (err, data) => {
-            if (!data) {
+    getUserShow = (req, res) => {
+        let username = req.params.screenname;
+        User.findOne({ 'user_info.0.screenname': username }, (err, user) => {
+            if (err) {
+                res.status(500).send({
+                message: "Error al devolver los datos",
+                });
+            } else {
+                if (!user) {
                 res.status(404).send({
-                message: "Error al obtener usuario o usuario no encontrado",
-            });
-            bcrypt.compare(user.password, data.password, (err, result) => {
-                if (!!result) {
-                    let token = jwt.sign({ user: data }, config.privateKey, {
-                        expiresIn: moment().add(14, "days").unix(),
-                    });
-                    res.status(200).send({
-                        message: "Usuario autenticado",
-                        token: token,
-                    });
-                }
-                boom.unauthorized("Contraseña incorrecta");
-            });
-        }});
-    };
-
-    register = (req, res) => {
-        let user = req.body;
-        const { error, value } = UserSchema.validate(user);
-        if (error) {
-                res.status(400).send({
-                message: "Error al registrar",
-                info: error,
+                    message: "No hay usuarios",
                 });
+                } else {
+                res.status(200).send({
+                    message: "Usuario devuelto",
+                    user,
+                });
+                }
             }
-        bcrypt.genSalt(10, (err, salt) => {
-            bcrypt.hash(value.password, salt, (err, hash) => {
-                let userExist = this.login(req, res) ? true : false
-                console.log(userExist)
-                if (!!userExist) {
-                    res.status(401).send({
-                        message: "Error user already exists",
-                    });
-                }
-                UserCreate.create(user, (err, user) => {
-                    if (err) {
-                        res.status(401).send({
-                        message: "Error al registrar usuario",
-                        });
-                    }
-                    let token = jwt.sign(
-                        { user: user },
-                        config.privateKey,
-                        {expiresIn: moment().add(14, "days").unix(),
-                    });
-                    res.status(201).json({
-                        message: "Usuario creado",
-                        token: token,
-                    });
-                });
-            // User.findOne({ email: user.email }, (err, data) => {
-            //     if (
-            //     !data ||
-            //     data === null ||
-            //     data === undefined ||
-            //     Object.keys(data).length > 4
-            //     ) {
-            //     User.create(user, (err, user) => {
-            //         if (err) {
-            //             res.status(401).send({
-            //                 message: "Error al registrar usuario",
-            //             });
-            //         }
-            //         let token = jwt.sign({ user: user }, config.privateKey, {
-            //             expiresIn: moment().add(14, "days").unix(),
-            //         });
-            //         res.status(201).json({
-            //             message: "Usuario creado",
-            //             token: token,
-            //         });
-            //     });
-            //     } else {
-            //     res.status(401).send({
-            //         message: "Error user already exists",
-            //     });
-                // }
-            // });
-            });
         });
     };
+
+    logout = (req, res) => {
+        res.removeHeader("Authorization");
+        return res.redirect("/");
+    };
+
+    usernnameChecker = async (req, res) => {
+        let username = req.body;
+        let usernameExist = await User.findOne({
+            "user_info.0.screenname": username,
+        });
+        if (usernameExist) {
+            return res.status(406).send({
+                message: "Username already taked"
+            });
+        } else {
+            return res.status(200).send({
+                message: "Username available"
+            });
+        }
+    }
 }
 
 module.exports = UserController;
