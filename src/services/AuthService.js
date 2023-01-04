@@ -14,9 +14,6 @@ class AuthService {
         return this.objAuthController.login(req, res);
     };
 
-    logout = (req, res) => {
-        return this.objAuthController.logout(req, res);
-    }
 }
 
 module.exports = AuthService;

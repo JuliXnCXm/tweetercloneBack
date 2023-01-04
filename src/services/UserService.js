@@ -6,14 +6,6 @@ class UserService {
         this.objUserController = new UserController
     }
 
-    updateUser = (req, res) => {
-        return this.objUserController.updateUser(req, res)
-    }
-
-    findAndUpdate = (req, res) => {
-        return this.objUserController.findAndUpdate(req, res)
-    }
-
     getUsers = (req, res) => {
         return this.objUserController.getUsers(req, res)
     }
@@ -26,13 +18,30 @@ class UserService {
         return this.objUserController.getUserShow(req, res)
     }
 
+    getExplorePeople = (req, res) => {
+        return this.objUserController.getExplorePeople(req, res)
+    };
+
+    getUserMe = (req, res) => {
+        return this.objUserController.getUsersMe(req, res)
+    }
+
     logout = (req, res) => {
         return this.objUserController.logout(req, res)
     }
 
-    usernnameChecker = (req, res) => {
-        return this.objUserController.usernnameChecker(req, res)
+    usernameChecker = (req, res) => {
+        return this.objUserController.usernameChecker(req, res)
     }
+
+    updateUser = (req, res) => {
+        return this.objUserController.updateUser(req, res)
+    }
+
+    updatePictures = (req, res) => {
+        return this.objUserController.updateUserPictures(req, res);
+    }
+
 }
 
 module.exports = UserService

@@ -8,18 +8,27 @@ class TokenController {
 
     verifyToken(req, res) {
         let token = this.getToken(req);
-        let decode = jwt.verify(token, config.privateKey);
-        if (decode.user.user_info[0].screenname != null) {
-            let isValid = this.validateToken(req, decode.user.user_info[0].screenname);
+        let tokenBody = this.decodeToken(req).user
+        if (tokenBody.user_info.screenname != null) {
+            let isValid = this.validateToken(
+                req,
+                tokenBody.user_info.screenname
+            );
             if (isValid) {
-                return token
+                return token;
             }
-        } else {
+            } else {
             res.status(401).send({
                 message: "Token is not valid",
             });
-            return res.redirect('/')
+            return res.redirect("/");
         }
+    }
+
+    decodeToken = (req) => {
+        let token = this.getToken(req);
+        let tokenDecoded = jwt.verify(token, config.privateKey);
+        return tokenDecoded;
     }
 
     validateToken = (req, decodeUsername) => {

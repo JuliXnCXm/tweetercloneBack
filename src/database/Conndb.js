@@ -7,15 +7,12 @@ class Conndb {
     }
     connection() {
         console.log('Connecting to database...');
-        this.conn =  mongoose.connect( cloud_db , {
-            useNewUrlParser: true,
-            useUnifiedTopology: true,
-        })
-        .then(() => {
-            console.log('DB connected')
-        }).catch(err => {
-            console.log('DB connection error', err)
-        })
+        mongoose.connect(cloud_db, {
+        });
+        this.conn = mongoose.connection;
+        this.conn.on('error', () => console.error.bind(console, 'connection error'));
+
+        this.conn.once('open', () => console.info('Connection to Database is successful'));
     }
 }
 
