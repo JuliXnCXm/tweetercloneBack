@@ -112,10 +112,7 @@ class UserController {
                             fs.unlinkSync(filepath);
                         }
                     }
-
-                    res.status(201).send({
-                        message: 'Success'
-                    })
+                    this.userUpdatedHandler(res, err, userUpdated.user_info)
                 }
                 else {
                     let filepath = path.join(
@@ -145,7 +142,7 @@ class UserController {
                 token = jwt.sign({ user: userUpdated }, config.privateKey, {
                     expiresIn: moment().add(14, "days").unix(),
                 });
-                return res.status(200).send({
+                return res.status(201).send({
                     message: "user updated",
                     token: token,
                 });
