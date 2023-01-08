@@ -19,16 +19,6 @@ class Server {
     constructor() {
         this.app = express();
         this.#config()
-        this.whitelist = ["http://localhost:3001"];
-        this.corsOptions = {
-            origin: function (origin, callback) {
-                if (this.whitelist.indexOf(origin) !== -1) {
-                callback(null, true);
-                } else {
-                callback(new Error("Not allowed by CORS"));
-                }
-            },
-        };
     }
 
     #config() {
