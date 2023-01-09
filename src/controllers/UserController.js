@@ -50,17 +50,20 @@ class UserController {
 
     findAndUpdate = (req, res, newUserData, userInfo, changeAuth) => {
 
-        let userUpdated = _.merge(userInfo.user_info, newUserData);
+        let userToUpdate = _.merge(userInfo.user_info, newUserData);
         console.log(newUserData);
 
         if (changeAuth === "true") {
-            UserCredentials.findByIdAndUpdate(userInfo.user_info.user_id, { $set : {...user}}, { new: true }, (err,userUpdated) => {
+            UserCredentials.findByIdAndUpdate(userInfo.user_info.user_id, { $set : {...userToUpdate}}, { new: true }, (err,userUpdated) => {
                 this.userUpdatedHandler(res, err, userUpdated)
             })
         } else {
             User.findByIdAndUpdate(
-                userInfo._id, {user_info : userUpdated},{ new: true }, (err,userUpdated) =>{
-                    this.userUpdatedHandler(res, err, userUpdated)
+                userInfo._id, {user_info : userToUpdate},{ new: true }, (err,userUpdated) => {
+                    let userDataForToken = {}
+                    userDataForToken["user_info"] = userUpdated.user_info
+                    userDataForToken["_id"] = userUpdated._id
+                    this.userUpdatedHandler(res, err, userDataForToken);
             });
         }
     }
@@ -112,7 +115,10 @@ class UserController {
                             fs.unlinkSync(filepath);
                         }
                     }
-                    this.userUpdatedHandler(res, err, userUpdated.user_info)
+                    let userDataForToken = {};
+                    userDataForToken["user_info"] = userUpdated.user_info;
+                    userDataForToken["_id"] = userUpdated._id;
+                    this.userUpdatedHandler(res, err, userDataForToken)
                 }
                 else {
                     let filepath = path.join(
@@ -145,6 +151,7 @@ class UserController {
                 return res.status(201).send({
                     message: "user updated",
                     token: token,
+                    username: userUpdated.user_info.screenname
                 });
             } else {
                 if (!userUpdated) {
